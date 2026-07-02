@@ -17,19 +17,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm ci
 
-      - name: Debug environment
-        run: |
-          node -v
-          npm -v
-          ls -la
-
-      - name: Run AEOS Kernel
-        run: npm run start
+      - name: Run Kernel
+        run: node kernel-runner.js
         env:
           BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
           BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
