@@ -1,34 +1,21 @@
-name: AEOS Kernel Runner
-
-on:
-  schedule:
-    - cron: "*/10 * * * *"
-  workflow_dispatch:
-
 jobs:
   run-kernel:
     runs-on: ubuntu-latest
 
+    env:
+      BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
+      BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Verify lockfile exists (HARD FAIL)
-        run: |
-          echo "PWD: $(pwd)"
-          ls -la
-          test -f package-lock.json || (echo "LOCKFILE MISSING" && exit 1)
+      - name: Verify lockfile exists
+        run: test -f package-lock.json
 
-      - name: Setup Node 24 (NO CACHE, NO DOWNLOAD TRICKS)
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Run Kernel
-        run: node kernel-runner.js
-        env:
-          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
-          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+      - run: node kernel-runner.js
