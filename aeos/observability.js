@@ -1,41 +1,12 @@
-const memory = {
-  runs: [],
-  events: []
-};
+import { logAEOS } from "./lib/logger.js";
 
-export function trackRun(run) {
-  const enriched = {
-    ...run,
-    timestamp: new Date().toISOString()
-  };
-
-  memory.runs.push(enriched);
-  memory.events.push({ type: "run", data: enriched });
-
-  if (memory.runs.length > 1000) memory.runs.shift();
+export function trackEvent(name, payload = {}) {
+  logAEOS("EVENT", name, payload);
 }
 
-export function emitEvent(type, data) {
-  memory.events.push({
-    type,
-    data,
-    timestamp: new Date().toISOString()
+export function trackError(error, context = {}) {
+  logAEOS("ERROR", error.message, {
+    stack: error.stack,
+    context,
   });
-
-  if (memory.events.length > 5000) memory.events.shift();
-}
-
-export function getStats() {
-  const total = memory.runs.length;
-  const failed = memory.runs.filter(r => r.status === "error").length;
-
-  return {
-    totalRuns: total,
-    failedRuns: failed,
-    successRate: total ? ((total - failed) / total * 100).toFixed(2) : 0
-  };
-}
-
-export function getRecentRuns(limit = 10) {
-  return memory.runs.slice(-limit).reverse();
 }
