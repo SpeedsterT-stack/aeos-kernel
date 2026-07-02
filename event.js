@@ -1,7 +1,25 @@
-console.log("🔥 AEOS START RAN");
+import { emit } from "./aeos/eventBus.js";
 
-process.stdout.write("STDOUT TEST\n");
+export const EventType = {
+  EVENT: "EVENT",
+  ERROR: "ERROR",
+  AUTO_FIX: "AUTO_FIX",
+  SYSTEM: "SYSTEM",
+};
 
-process.stderr.write("STDERR TEST\n");
+export function createEvent(type, name, payload = {}) {
+  return {
+    id: crypto.randomUUID?.() || String(Date.now()),
+    ts: new Date().toISOString(),
+    type,
+    name,
+    payload,
+  };
+}
 
-throw new Error("CRASH TEST");
+// AUTO EMIT HOOK (belangrijk)
+export function sendEvent(type, name, payload) {
+  const event = createEvent(type, name, payload);
+  emit(event);
+  return event;
+}
