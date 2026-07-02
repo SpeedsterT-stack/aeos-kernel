@@ -1,3 +1,5 @@
+console.log("🔥 AEOS EVENT FILE STARTED");
+
 export const EventType = {
   EVENT: "EVENT",
   ERROR: "ERROR",
@@ -15,5 +17,7 @@ export function createEvent(type, name, payload = {}) {
   };
 }
 
-// 👇 DIT IS DE TEST (onderaan bestand)
-console.log(createEvent("EVENT", "test", { ok: true }));
+const test = createEvent("EVENT", "test", { ok: true });
+
+console.log("RESULT:");
+console.log(test);
