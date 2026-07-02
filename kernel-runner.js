@@ -26,13 +26,14 @@ export async function runCycle() {
   console.log("🚀 AEOS CYCLE START");
 
   const res = await base44.entities.create("SEOAuditLog", {
-    description: "AEOS GitHub cycle",
-    raw_output: JSON.stringify({
-      seo: {},
-      growth: {},
-      pipeline: {}
-    })
-  });
+  audit_date: new Date().toISOString(),
+  description: "AEOS GitHub cycle",
+  raw_output: JSON.stringify({
+    seo: {},
+    growth: {},
+    pipeline: {}
+  })
+});
 
   console.log("✅ CREATED:", res);
 }
