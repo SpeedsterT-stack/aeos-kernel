@@ -1,19 +1,5 @@
-- name: ENV sanity check
-  run: |
-    echo "APP_ID length = ${#BASE44_APP_ID}"
-    echo "API_KEY length = ${#BASE44_API_KEY}"
-
-    if [ -z "$BASE44_APP_ID" ]; then
-      echo "❌ APP_ID missing"
-      exit 1
-    fi
-
-    if [ -z "$BASE44_API_KEY" ]; then
-      echo "❌ API_KEY missing"
-      exit 1
-    fi
-
-    echo "✅ ENV OK"
+- name: Run kernel
+  run: node kernel-runner.js
   env:
     BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
     BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
