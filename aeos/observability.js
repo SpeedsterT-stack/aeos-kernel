@@ -1,16 +1,28 @@
 const memory = {
-  runs: []
+  runs: [],
+  events: []
 };
 
 export function trackRun(run) {
-  memory.runs.push({
+  const enriched = {
     ...run,
+    timestamp: new Date().toISOString()
+  };
+
+  memory.runs.push(enriched);
+  memory.events.push({ type: "run", data: enriched });
+
+  if (memory.runs.length > 1000) memory.runs.shift();
+}
+
+export function emitEvent(type, data) {
+  memory.events.push({
+    type,
+    data,
     timestamp: new Date().toISOString()
   });
 
-  if (memory.runs.length > 1000) {
-    memory.runs.shift();
-  }
+  if (memory.events.length > 5000) memory.events.shift();
 }
 
 export function getStats() {
