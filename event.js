@@ -14,3 +14,6 @@ export function createEvent(type, name, payload = {}) {
     payload,
   };
 }
+
+// 👇 DIT IS DE TEST (onderaan bestand)
+console.log(createEvent("EVENT", "test", { ok: true }));
