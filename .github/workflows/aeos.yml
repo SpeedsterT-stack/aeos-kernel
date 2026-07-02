@@ -19,7 +19,7 @@ jobs:
           node-version: 18
 
       - name: Install SDK
-        run: npm install @base44/sdk
+        run: npm install
 
       - name: Run kernel
         run: node kernel-runner.js
