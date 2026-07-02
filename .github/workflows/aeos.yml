@@ -15,23 +15,29 @@ jobs:
         with:
           clean: true
 
-      - name: Show repo structure (DEBUG)
+      - name: Debug full structure
         run: |
           echo "WORKSPACE: $GITHUB_WORKSPACE"
           pwd
           ls -R
 
-      - name: Setup Node
+      # 🔥 CRITICAL FIX: NO CACHE (temporary)
+      - name: Setup Node (NO CACHE)
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      # 🔥 CRITICAL FIX: force correct folder
+      - name: Force correct directory + verify lockfile
+        run: |
+          cd $GITHUB_WORKSPACE
+          echo "=== FILES ==="
+          ls -la
+          echo "=== LOCKFILE CHECK ==="
+          test -f package-lock.json && echo "LOCKFILE OK" || (echo "NO LOCKFILE HERE" && exit 1)
+
       - name: Install dependencies
         run: |
           cd $GITHUB_WORKSPACE
-          ls -la
           npm ci
 
       - name: Run Kernel
