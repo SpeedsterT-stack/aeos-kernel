@@ -1,8 +1,17 @@
 import fs from "fs";
 
-export function logAEOS(msg) {
+export function logAEOS(type, msg, data = null) {
+  const line = {
+    ts: new Date().toISOString(),
+    type,
+    msg,
+    data,
+  };
+
   fs.appendFileSync(
     "./aeos.log",
-    `[${new Date().toISOString()}] ${msg}\n`
+    JSON.stringify(line) + "\n"
   );
+
+  console.log(`[AEOS:${type}]`, msg);
 }
