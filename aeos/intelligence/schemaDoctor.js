@@ -1,21 +1,14 @@
-export function schemaDoctor(error, payload) {
-  const msg = error?.data?.message || "";
+export class SchemaDoctor {
+  static healSEOAuditLog(payload) {
+    return {
+      description: payload.description || "auto-healed AEOS cycle",
+      raw_output: payload.raw_output || JSON.stringify({}),
+      
+      // 🔥 AUTO FIX missing field
+      audit_date: payload.audit_date || new Date().toISOString(),
 
-  const fixed = { ...payload };
-
-  // Fix: missing audit_date (jouw eerdere issue)
-  if (msg.includes("audit_date")) {
-    fixed.audit_date = new Date().toISOString();
+      // optional future-safe fields
+      status: payload.status || "healthy",
+    };
   }
-
-  // Generic fallback safety
-  if (!fixed.description) {
-    fixed.description = "AEOS auto-healed cycle";
-  }
-
-  if (!fixed.raw_output) {
-    fixed.raw_output = {};
-  }
-
-  return fixed;
 }
