@@ -12,11 +12,15 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          clean: true
 
-      - name: Debug workspace
+      - name: Debug workspace (IMPORTANT)
         run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
           pwd
           ls -la
+          ls -R
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -24,10 +28,17 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Verify lockfile exists
+        run: |
+          echo "Checking lockfile..."
+          ls -la package-lock.json
+
       - name: Install dependencies
+        working-directory: ${{ github.workspace }}
         run: npm ci
 
       - name: Run Kernel
+        working-directory: ${{ github.workspace }}
         run: node kernel-runner.js
         env:
           BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
