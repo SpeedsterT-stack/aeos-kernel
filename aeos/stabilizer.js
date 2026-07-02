@@ -1,28 +1,42 @@
-import { logAEOS } from "./lib/logger.js";
+import { emit } from "./observability.js";
 
 export function stabilize(error, context = {}) {
-  logAEOS("ERROR", error.message || "unknown error", {
-    stack: error.stack,
-    context,
-  });
-
-  // BASIC AUTO-HEAL RULES (v1)
-  if (error?.status === 422) {
-    return {
-      action: "schema_fix_required",
-      fix: "missing_fields_detected",
-    };
-  }
-
-  if (error?.status === 403) {
-    return {
-      action: "permission_issue",
-      fix: "check_base44_permissions",
-    };
-  }
-
-  return {
-    action: "unknown",
-    fix: "manual_review_required",
+  const result = {
+    action: "none",
+    severity: "unknown",
   };
+
+  // 422 → schema issue
+  if (error?.status === 422 || error?.message?.includes("audit_date")) {
+    result.action = "schema_fix_required";
+    result.severity = "high";
+
+    emit({
+      type: "AUTO_FIX",
+      name: "schemaDoctor_trigger",
+      payload: { error, context },
+    });
+
+    return result;
+  }
+
+  // 403 → permissions
+  if (error?.status === 403) {
+    result.action = "permission_check_required";
+    result.severity = "high";
+
+    emit({
+      type: "AUTO_FIX",
+      name: "permission_analyzer",
+      payload: { error, context },
+    });
+
+    return result;
+  }
+
+  // fallback
+  result.action = "manual_review";
+  result.severity = "medium";
+
+  return result;
 }
