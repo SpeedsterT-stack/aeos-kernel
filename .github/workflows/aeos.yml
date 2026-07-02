@@ -1,66 +1,19 @@
-name: AEOS Kernel Runner (TEST MODE)
+- name: ENV sanity check
+  run: |
+    echo "APP_ID length = ${#BASE44_APP_ID}"
+    echo "API_KEY length = ${#BASE44_API_KEY}"
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "*/10 * * * *"
+    if [ -z "$BASE44_APP_ID" ]; then
+      echo "❌ APP_ID missing"
+      exit 1
+    fi
 
-concurrency:
-  group: aeos-test
-  cancel-in-progress: true
+    if [ -z "$BASE44_API_KEY" ]; then
+      echo "❌ API_KEY missing"
+      exit 1
+    fi
 
-jobs:
-  run-kernel:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Show repo structure
-        run: |
-          echo "=== WORKSPACE ==="
-          pwd
-          ls -la
-
-      - name: Validate lockfile
-        run: |
-          test -f package-lock.json || (echo "❌ package-lock.json missing" && exit 1)
-          echo "✅ lockfile found"
-
-      - name: Setup Node 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      # 🔥 TEST 1: ENV CHECK (CRITICAL)
-      - name: ENV sanity check
-        run: |
-          echo "APP_ID length = ${#BASE44_APP_ID}"
-          echo "API_KEY length = ${#BASE44_API_KEY}"
-
-          if [ -z "$BASE44_APP_ID" ]; then
-            echo "❌ BASE44_APP_ID MISSING"
-            exit 1
-          fi
-
-          if [ -z "$BASE44_API_KEY" ]; then
-            echo "❌ BASE44_API_KEY MISSING"
-            exit 1
-          fi
-
-          echo "✅ ENV OK"
-        env:
-          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
-          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
-
-      # 🚀 RUN KERNEL
-      - name: Run kernel (test mode)
-        run: node kernel-runner.js
-        env:
-          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
-          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+    echo "✅ ENV OK"
+  env:
+    BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
+    BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
