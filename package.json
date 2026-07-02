@@ -1,11 +1,11 @@
 {
   "name": "aeos-kernel",
-  "type": "module",
   "version": "1.0.0",
-  "dependencies": {
-    "@base44/sdk": "^1.0.0"
-  },
+  "type": "module",
   "scripts": {
     "start": "node kernel-runner.js"
+  },
+  "dependencies": {
+    "@base44/sdk": "^1.0.0"
   }
 }
