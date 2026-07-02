@@ -1,11 +1,5 @@
-{
-  "name": "aeos-kernel",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "@base44/sdk": "*"
-  },
-  "scripts": {
-    "start": "node kernel-runner.js"
-  }
+"scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview"
 }
