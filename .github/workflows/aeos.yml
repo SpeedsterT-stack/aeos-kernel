@@ -15,11 +15,10 @@ jobs:
         with:
           clean: true
 
-      - name: Debug workspace (IMPORTANT)
+      - name: Show repo structure (DEBUG)
         run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "WORKSPACE: $GITHUB_WORKSPACE"
           pwd
-          ls -la
           ls -R
 
       - name: Setup Node
@@ -28,18 +27,17 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Verify lockfile exists
-        run: |
-          echo "Checking lockfile..."
-          ls -la package-lock.json
-
+      # 🔥 CRITICAL FIX: force correct folder
       - name: Install dependencies
-        working-directory: ${{ github.workspace }}
-        run: npm ci
+        run: |
+          cd $GITHUB_WORKSPACE
+          ls -la
+          npm ci
 
       - name: Run Kernel
-        working-directory: ${{ github.workspace }}
-        run: node kernel-runner.js
+        run: |
+          cd $GITHUB_WORKSPACE
+          node kernel-runner.js
         env:
           BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
           BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
