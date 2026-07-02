@@ -1,12 +1,12 @@
-name: AEOS Kernel Runner
+name: AEOS Kernel Runner (TEST MODE)
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "*/10 * * * *"
-  workflow_dispatch:
 
 concurrency:
-  group: aeos-kernel
+  group: aeos-test
   cancel-in-progress: true
 
 jobs:
@@ -14,29 +14,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Validate repo
+      - name: Show repo structure
         run: |
+          echo "=== WORKSPACE ==="
+          pwd
           ls -la
-          test -f package-lock.json || (echo "LOCKFILE MISSING" && exit 1)
 
-      - name: Setup Node
+      - name: Validate lockfile
+        run: |
+          test -f package-lock.json || (echo "❌ package-lock.json missing" && exit 1)
+          echo "✅ lockfile found"
+
+      - name: Setup Node 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
-      - name: Install deps (CI SAFE)
+      - name: Install dependencies
         run: npm ci
 
-      - name: Validate secrets
+      # 🔥 TEST 1: ENV CHECK (CRITICAL)
+      - name: ENV sanity check
         run: |
-          test -n "${{ secrets.BASE44_APP_ID }}" || (echo "APP_ID MISSING" && exit 1)
-          test -n "${{ secrets.BASE44_API_KEY }}" || (echo "API_KEY MISSING" && exit 1)
+          echo "APP_ID length = ${#BASE44_APP_ID}"
+          echo "API_KEY length = ${#BASE44_API_KEY}"
 
-      - name: Run kernel
+          if [ -z "$BASE44_APP_ID" ]; then
+            echo "❌ BASE44_APP_ID MISSING"
+            exit 1
+          fi
+
+          if [ -z "$BASE44_API_KEY" ]; then
+            echo "❌ BASE44_API_KEY MISSING"
+            exit 1
+          fi
+
+          echo "✅ ENV OK"
+        env:
+          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
+          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+
+      # 🚀 RUN KERNEL
+      - name: Run kernel (test mode)
         run: node kernel-runner.js
         env:
           BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
