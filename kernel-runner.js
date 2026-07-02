@@ -3,7 +3,8 @@ dotenv.config();
 
 import { createBase44 } from "./aeos/baseClient.js";
 import { createSEOAuditLog } from "./aeos/loggers.js";
-import { trackRun, getStats } from "./aeos/observability.js";
+import { trackRun, getStats, emitEvent } from "./aeos/observability.js";
+import { withRetry } from "./aeos/resilience.js";
 
 async function runCycle() {
   const base44 = createBase44();
@@ -11,40 +12,45 @@ async function runCycle() {
 
   const start = Date.now();
 
-  try {
-    console.log("🧠 AEOS START");
+  console.log("🧠 AEOS AUTONOMOUS START");
 
-    const result = {
-      seo: {},
-      growth: {},
-      pipeline: {}
+  try {
+    const payload = {
+      description: "AEOS autonomous cycle",
+      raw_output: {
+        seo: {},
+        growth: {},
+        pipeline: {}
+      }
     };
 
-    await logSEOAudit({
-      description: "AEOS GitHub cycle",
-      raw_output: result
-    });
+    const safeCreate = withRetry(() => logSEOAudit(payload));
 
-    const duration = Date.now() - start;
+    const result = await safeCreate();
+
+    emitEvent("db_write", { success: true, result });
 
     trackRun({
       status: "success",
-      duration
+      duration: Date.now() - start
     });
 
-    console.log("✅ CYCLE OK");
-    console.log("📊 stats:", getStats());
+    console.log("✅ SUCCESS");
+    console.log("📊", getStats());
   } catch (err) {
-    const duration = Date.now() - start;
+    emitEvent("error", {
+      message: err.message,
+      stack: err.stack
+    });
 
     trackRun({
       status: "error",
       error: err.message,
-      duration
+      duration: Date.now() - start
     });
 
-    console.error("❌ AEOS ERROR:", err);
-    console.log("📊 stats:", getStats());
+    console.error("❌ FAILED:", err.message);
+    console.log("📊", getStats());
 
     process.exit(1);
   }
