@@ -1,55 +1,28 @@
-name: AEOS Kernel Runner
+name: DEBUG AEOS
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
-  run-kernel:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          clean: true
+      - uses: actions/checkout@v4
 
-      - name: Debug workspace structure
-        run: |
-          echo "WORKSPACE: $GITHUB_WORKSPACE"
-          pwd
-          ls -la
-          echo "---- FULL TREE ----"
-          ls -R
+      - name: Show structure
+        run: ls -R
 
-      # ✅ FIXED: setup-node without cache (avoids lockfile detection issues)
-      - name: Setup Node
+      - name: Check lockfile
+        run: stat package-lock.json
+
+      - name: Node setup
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # ✅ HARD GUARD: ensure lockfile exists where CI runs
-      - name: Validate lockfile
-        run: |
-          cd $GITHUB_WORKSPACE
-          if [ ! -f package-lock.json ]; then
-            echo "❌ package-lock.json missing in root"
-            exit 1
-          fi
-          echo "✅ package-lock.json found"
+      - name: Install
+        run: npm ci --verbose
 
-      # ⚡ Clean install (CI-safe)
-      - name: Install dependencies
-        run: |
-          cd $GITHUB_WORKSPACE
-          npm ci
-
-      # 🚀 Run kernel
-      - name: Run AEOS Kernel
-        run: |
-          cd $GITHUB_WORKSPACE
-          node kernel-runner.js
-        env:
-          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
-          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+      - name: Run
+        run: node kernel-runner.js
