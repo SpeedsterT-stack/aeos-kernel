@@ -1,4 +1,4 @@
-name: AEOS Kernel Runner
+name: AEOS Production Kernel
 
 on:
   schedule:
@@ -6,30 +6,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-kernel:
+  run:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm ci
 
-      - name: Debug env
+      - name: ENV Guard
         run: |
-          echo "APP_ID length=${#BASE44_APP_ID}"
-          echo "API_KEY length=${#BASE44_API_KEY}"
-        env:
-          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
-          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+          if [ -z "${{ secrets.BASE44_APP_ID }}" ]; then echo "NO APP ID" && exit 1; fi
+          if [ -z "${{ secrets.BASE44_API_KEY }}" ]; then echo "NO API KEY" && exit 1; fi
 
-      - name: Run Kernel
-        run: node kernel-runner.js
+      - name: Run AEOS Kernel
         env:
           BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
           BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
+        run: node kernel-runner.js
