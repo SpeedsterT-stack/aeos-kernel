@@ -1,5 +1,3 @@
-console.log(">>> FILE LOADED <<<");
-
 export const EventType = {
   EVENT: "EVENT",
   ERROR: "ERROR",
@@ -17,9 +15,9 @@ export function createEvent(type, name, payload = {}) {
   };
 }
 
-const testEvent = createEvent("EVENT", "test", { ok: true });
+// TEST OUTPUT
+console.log("🔥 EVENT MODULE LOADED");
 
-console.log("EVENT RESULT:");
-console.log(testEvent);
+const test = createEvent("EVENT", "test", { ok: true });
 
-console.log(">>> END OF FILE <<<");
+console.log(test);
