@@ -1,3 +1,5 @@
+console.log(">>> FILE LOADED <<<");
+
 export const EventType = {
   EVENT: "EVENT",
   ERROR: "ERROR",
@@ -15,8 +17,9 @@ export function createEvent(type, name, payload = {}) {
   };
 }
 
-console.log("🔥 AEOS EVENT TEST START");
-
 const testEvent = createEvent("EVENT", "test", { ok: true });
 
+console.log("EVENT RESULT:");
 console.log(testEvent);
+
+console.log(">>> END OF FILE <<<");
