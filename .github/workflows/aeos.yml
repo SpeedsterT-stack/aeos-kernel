@@ -1,21 +1,43 @@
+name: AEOS Kernel Runner
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: aeos-kernel
+  cancel-in-progress: true
+
 jobs:
   run-kernel:
     runs-on: ubuntu-latest
 
-    env:
-      BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
-      BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Verify lockfile exists
-        run: test -f package-lock.json
+      - name: Validate repo
+        run: |
+          ls -la
+          test -f package-lock.json || (echo "LOCKFILE MISSING" && exit 1)
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
 
-      - run: npm ci
+      - name: Install deps (CI SAFE)
+        run: npm ci
 
-      - run: node kernel-runner.js
+      - name: Validate secrets
+        run: |
+          test -n "${{ secrets.BASE44_APP_ID }}" || (echo "APP_ID MISSING" && exit 1)
+          test -n "${{ secrets.BASE44_API_KEY }}" || (echo "API_KEY MISSING" && exit 1)
+
+      - name: Run kernel
+        run: node kernel-runner.js
+        env:
+          BASE44_APP_ID: ${{ secrets.BASE44_APP_ID }}
+          BASE44_API_KEY: ${{ secrets.BASE44_API_KEY }}
