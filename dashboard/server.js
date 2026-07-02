@@ -4,26 +4,40 @@ import fs from "fs";
 const app = express();
 const PORT = 3333;
 
-app.get("/health", (req, res) => {
-  res.json({ status: "AEOS OK", time: new Date().toISOString() });
+function readLogs() {
+  try {
+    return fs.readFileSync("./aeos.log", "utf-8").split("\n").slice(-200);
+  } catch {
+    return [];
+  }
+}
+
+// SYSTEM STATUS
+app.get("/status", (req, res) => {
+  res.json({
+    system: "AEOS",
+    status: "online",
+    time: new Date().toISOString(),
+  });
 });
 
-// simple log stream
+// LOG STREAM
 app.get("/logs", (req, res) => {
-  const logs = fs.existsSync("./aeos.log")
-    ? fs.readFileSync("./aeos.log", "utf-8")
-    : "";
+  res.json({
+    logs: readLogs(),
+  });
+});
 
-  res.send(`
-    <html>
-      <body style="background:#0b0f14;color:#00ff9d;font-family:monospace">
-        <h2>AEOS Observability</h2>
-        <pre>${logs}</pre>
-      </body>
-    </html>
-  `);
+// SIMPLE METRICS
+app.get("/metrics", (req, res) => {
+  const logs = readLogs();
+
+  res.json({
+    totalEvents: logs.length,
+    lastEvent: logs[logs.length - 1] || null,
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`📊 AEOS Dashboard running on http://localhost:${PORT}`);
+  console.log(`📊 AEOS Control Center running on http://localhost:${PORT}`);
 });
