@@ -1,79 +1,37 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
+import { createClient } from "@base44/sdk";
+import { AEOSStabilizer } from "./aeos/stabilizer.js";
 
-import { createBase44 } from "./aeos/baseClient.js";
-import { createSEOAuditLog } from "./aeos/loggers.js";
-import { trackRun, getStats, emitEvent } from "./aeos/observability.js";
-import { withRetry } from "./aeos/resilience.js";
+// ENV check FIRST (hard fail early)
+AEOSStabilizer.validateEnv();
 
-import { analyzeError } from "./aeos/intelligence/analyzer.js";
-import { schemaDoctor } from "./aeos/intelligence/schemaDoctor.js";
+const base44 = createClient({
+  appId: process.env.BASE44_APP_ID,
+  headers: {
+    api_key: process.env.BASE44_API_KEY,
+  },
+});
+
+const stabilizer = new AEOSStabilizer(base44);
+
+console.log("🧠 AEOS START");
 
 async function runCycle() {
-  const base44 = createBase44();
-  const logSEOAudit = createSEOAuditLog(base44);
-
-  const start = Date.now();
-
-  console.log("🧠 AEOS AUTONOMOUS v2 START");
-
-  let payload = {
-    description: "AEOS autonomous cycle",
-    raw_output: {
+  const payload = {
+    description: "AEOS GitHub cycle",
+    raw_output: JSON.stringify({
       seo: {},
       growth: {},
-      pipeline: {}
-    }
+      pipeline: {},
+    }),
+    audit_date: new Date().toISOString(),
   };
 
-  try {
-    const safeWrite = withRetry(() => logSEOAudit(payload));
+  const result = await stabilizer.safeCreateSEOAuditLog(payload);
 
-    await safeWrite();
-
-    trackRun({
-      status: "success",
-      duration: Date.now() - start
-    });
-
-    console.log("✅ SUCCESS");
-    console.log(getStats());
-  } catch (err) {
-    const analysis = analyzeError(err);
-
-    emitEvent("error_analysis", analysis);
-
-    console.log("🧠 ERROR ANALYZED:", analysis);
-
-    // AUTO HEAL LOOP
-    if (analysis.action === "AUTO_FIX_PAYLOAD") {
-      payload = schemaDoctor(err, payload);
-
-      console.log("🔧 AUTO-HEALED PAYLOAD:", payload);
-
-      try {
-        await logSEOAudit(payload);
-
-        trackRun({
-          status: "self-healed-success",
-          duration: Date.now() - start
-        });
-
-        console.log("🟢 SELF-HEALED SUCCESS");
-        return;
-      } catch (secondErr) {
-        console.error("❌ SELF-HEAL FAILED:", secondErr.message);
-      }
-    }
-
-    trackRun({
-      status: "error",
-      error: err.message,
-      duration: Date.now() - start
-    });
-
-    console.error("❌ FINAL FAIL:", err.message);
-  }
+  console.log("📦 RESULT:", result);
 }
 
-runCycle();
+runCycle().catch((err) => {
+  console.error("❌ AEOS CRASH:", err);
+});
