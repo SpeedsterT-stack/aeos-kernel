@@ -1,14 +1,10 @@
 export function connectEventStream(onEvent) {
-  // simpele mock stream (later WebSocket / SSE)
-  const interval = setInterval(() => {
-    onEvent({
-      id: crypto.randomUUID(),
-      ts: new Date().toISOString(),
-      type: "EVENT",
-      name: "heartbeat",
-      payload: { status: "alive" }
-    });
-  }, 2000);
+  const ws = new WebSocket("ws://localhost:8080");
 
-  return () => clearInterval(interval);
+  ws.onmessage = (msg) => {
+    const event = JSON.parse(msg.data);
+    onEvent(event);
+  };
+
+  return () => ws.close();
 }
