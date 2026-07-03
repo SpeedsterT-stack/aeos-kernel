@@ -1,13 +1,35 @@
-import { startWSServer } from "./kernel/wsServer.js";
-import { sendEvent, EventType } from "./event.js";
+import dotenv from "dotenv";
 
-startWSServer(8080);
+// FORCE correct env loading (NO dotenvx / no injection issues)
+dotenv.config({ path: "./.env", override: true });
 
-console.log("🔥 AEOS KERNEL STARTED");
+import { createBase44 } from "./aeos/baseClient.js";
 
-setInterval(() => {
-  sendEvent(EventType.EVENT, "kernel_tick", {
-    cpu: Math.random(),
-    memory: Math.random()
-  });
-}, 2000);
+console.log("🧠 AEOS START");
+console.log("APP_ID:", process.env.BASE44_APP_ID);
+console.log("API KEY length:", process.env.BASE44_API_KEY?.length || 0);
+
+async function runCycle() {
+  const client = createBase44();
+
+  const payload = {
+    description: "AEOS GitHub cycle",
+    raw_output: JSON.stringify({
+      seo: {},
+      growth: {},
+      pipeline: {},
+    }),
+  };
+
+  return await client.entities.create("SEOAuditLog", payload);
+}
+
+// MAIN BOOT
+(async () => {
+  try {
+    await runCycle();
+  } catch (err) {
+    console.error("❌ AEOS ERROR:", err);
+    process.exit(1);
+  }
+})();
