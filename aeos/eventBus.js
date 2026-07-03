@@ -1,22 +1,22 @@
+import { broadcast } from "../kernel/wsServer.js";
+
 const listeners = {};
 
 export function on(eventType, handler) {
-  if (!listeners[eventType]) {
-    listeners[eventType] = [];
-  }
+  if (!listeners[eventType]) listeners[eventType] = [];
   listeners[eventType].push(handler);
 }
 
 export function emit(event) {
   const handlers = listeners[event.type] || [];
 
-  for (const handler of handlers) {
-    try {
-      handler(event);
-    } catch (err) {
-      console.error("Event handler error:", err);
-    }
+  // local handlers
+  for (const h of handlers) {
+    try { h(event); } catch (e) { console.error(e); }
   }
+
+  // 🌐 realtime stream to dashboard
+  broadcast(event);
 }
 
 export function clear() {
