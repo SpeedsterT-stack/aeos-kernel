@@ -1,33 +1,13 @@
-import { trackEvent, trackError } from "./aeos/observability.js";
-import { stabilize } from "./aeos/stabilizer.js";
+import { startWSServer } from "./kernel/wsServer.js";
+import { sendEvent, EventType } from "./event.js";
 
-async function runCycle() {
-  trackEvent("cycle_start");
+startWSServer(8080);
 
-  // simulate work
-  const random = Math.random();
+console.log("🔥 AEOS KERNEL STARTED");
 
-  if (random < 0.6) {
-    throw new Error("Simulated 422 schema failure: audit_date missing");
-  }
-
-  trackEvent("cycle_success", { score: random });
-}
-
-async function main() {
-  try {
-    await runCycle();
-  } catch (err) {
-    trackError(err, { source: "kernel" });
-
-    const result = stabilize(err, {
-      source: "kernel-runner",
-    });
-
-    console.log("🧠 STABILIZER:", result);
-
-    trackEvent("cycle_recovered", result);
-  }
-}
-
-setInterval(main, 5000);
+setInterval(() => {
+  sendEvent(EventType.EVENT, "kernel_tick", {
+    cpu: Math.random(),
+    memory: Math.random()
+  });
+}, 2000);
