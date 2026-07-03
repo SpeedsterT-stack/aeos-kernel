@@ -1,13 +1,29 @@
-import dotenv from "dotenv";
-
-// FORCE correct env loading (NO dotenvx / no injection issues)
-dotenv.config({ path: "./.env", override: true });
-
+import fs from "fs";
 import { createBase44 } from "./aeos/baseClient.js";
 
-console.log("🧠 AEOS START");
+console.log("🧠 AEOS START (RAW ENV MODE)");
+
+// 🔥 HARD LOAD .env (bypasses ANY injector)
+function loadEnv() {
+  const raw = fs.readFileSync("./.env", "utf-8");
+
+  for (const line of raw.split("\n")) {
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const [key, ...valueParts] = trimmed.split("=");
+    const value = valueParts.join("=").trim();
+
+    process.env[key.trim()] = value;
+  }
+}
+
+loadEnv();
+
+// DEBUG
 console.log("APP_ID:", process.env.BASE44_APP_ID);
-console.log("API KEY length:", process.env.BASE44_API_KEY?.length || 0);
+console.log("API KEY length:", process.env.BASE44_API_KEY?.length);
 
 async function runCycle() {
   const client = createBase44();
@@ -24,12 +40,9 @@ async function runCycle() {
   return await client.entities.create("SEOAuditLog", payload);
 }
 
-// MAIN BOOT
-(async () => {
-  try {
-    await runCycle();
-  } catch (err) {
-    console.error("❌ AEOS ERROR:", err);
-    process.exit(1);
-  }
-})();
+try {
+  await runCycle();
+} catch (err) {
+  console.error("❌ AEOS ERROR:", err);
+  process.exit(1);
+}
